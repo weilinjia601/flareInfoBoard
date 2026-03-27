@@ -1,0 +1,757 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flare链上信息平台 | 58同城风格</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e9eef5 100%);
+            padding: 24px;
+            min-height: 100vh;
+            color: #1e293b;
+        }
+
+        /* 毛玻璃容器 */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* 头部 */
+        .header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 28px;
+            padding: 20px 32px;
+            margin-bottom: 28px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.03), 0 2px 6px rgba(0, 0, 0, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(120deg, #3b82f6, #8b5cf6);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            letter-spacing: -0.02em;
+        }
+
+        .wallet-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .address-badge {
+            background: #f1f5f9;
+            padding: 8px 18px;
+            border-radius: 40px;
+            font-family: monospace;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #0f172a;
+            border: 1px solid #e2e8f0;
+        }
+
+        .connect-btn, .disconnect-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+        }
+
+        .connect-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(59,130,246,0.3);
+        }
+
+        .disconnect-btn {
+            background: #ef4444;
+        }
+
+        .disconnect-btn:hover {
+            background: #dc2626;
+        }
+
+        /* 双栏布局 */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            gap: 28px;
+        }
+
+        /* 卡片通用样式 */
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(2px);
+            border-radius: 28px;
+            padding: 28px;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 2px 4px rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s, box-shadow 0.2s;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 30px -12px rgba(0, 0, 0, 0.1);
+        }
+
+        .card h2 {
+            font-size: 1.4rem;
+            margin-top: 0;
+            margin-bottom: 1.2rem;
+            font-weight: 600;
+            border-left: 5px solid #3b82f6;
+            padding-left: 16px;
+        }
+
+        /* 表单 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: #334155;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59,130,246,0.2);
+            background: white;
+        }
+
+        textarea {
+            resize: vertical;
+        }
+
+        .char-counter {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-align: right;
+            margin-top: 6px;
+        }
+
+        .btn {
+            background: linear-gradient(105deg, #3b82f6, #6366f1);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            transition: all 0.2s;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .btn:hover:not(:disabled) {
+            transform: translateY(-1px);
+            box-shadow: 0 8px 20px rgba(59,130,246,0.3);
+        }
+
+        .btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* 信息列表 */
+        .post-list {
+            max-height: 520px;
+            overflow-y: auto;
+            scrollbar-width: thin;
+        }
+
+        .post-item {
+            padding: 18px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            background: #ffffff;
+            transition: all 0.15s;
+            cursor: pointer;
+            border: 1px solid #eef2ff;
+        }
+
+        .post-item:hover {
+            background: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .post-item.active {
+            background: #eef2ff;
+            border-left: 5px solid #3b82f6;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .post-title {
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: #0f172a;
+        }
+
+        .post-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 0.75rem;
+            color: #475569;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .badge {
+            background: #e0e7ff;
+            color: #4338ca;
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        /* 详情区域 */
+        .detail-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+            word-break: break-word;
+        }
+
+        .detail-info {
+            font-size: 0.8rem;
+            color: #475569;
+            margin-bottom: 20px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .detail-content {
+            background: #f1f5f9;
+            padding: 20px;
+            border-radius: 24px;
+            margin: 20px 0;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-size: 0.95rem;
+        }
+
+        /* 评论 */
+        .comments-section {
+            margin-top: 28px;
+        }
+
+        .comment-list {
+            max-height: 280px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+
+        .comment-item {
+            background: #f8fafc;
+            padding: 14px;
+            border-radius: 20px;
+            margin-bottom: 12px;
+            transition: background 0.1s;
+        }
+
+        .comment-meta {
+            font-size: 0.7rem;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
+
+        .comment-content {
+            word-break: break-word;
+            font-size: 0.9rem;
+        }
+
+        .empty-msg {
+            text-align: center;
+            color: #94a3b8;
+            padding: 40px 20px;
+            font-style: italic;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #64748b;
+        }
+
+        /* 响应式 */
+        @media (max-width: 900px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+            .header {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📢 Flare 链上信息平台</h1>
+        <div class="wallet-info" id="walletInfo">
+            <div id="walletAddress" class="address-badge">未连接</div>
+            <button id="connectBtn" class="connect-btn">连接钱包</button>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <!-- 左侧面板 -->
+        <div class="left-panel">
+            <div class="card">
+                <h2>📝 发布信息</h2>
+                <div class="form-group">
+                    <label>标题（最多200字）</label>
+                    <input type="text" id="postTitle" maxlength="200" placeholder="请输入标题">
+                    <div class="char-counter"><span id="titleCounter">0</span>/200</div>
+                </div>
+                <div class="form-group">
+                    <label>分类</label>
+                    <select id="postCategory">
+                        <option value="0">🏢 招聘</option>
+                        <option value="1">🏠 房产</option>
+                        <option value="2">📱 二手</option>
+                        <option value="3">🛠️ 服务</option>
+                        <option value="4">📌 其他</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>内容（最多500字）</label>
+                    <textarea id="postContent" rows="4" maxlength="500" placeholder="详细描述..."></textarea>
+                    <div class="char-counter"><span id="contentCounter">0</span>/500</div>
+                </div>
+                <button id="publishBtn" class="btn" disabled>🔒 请先连接钱包</button>
+            </div>
+
+            <div class="card">
+                <h2>📋 信息列表</h2>
+                <div id="postListContainer" class="post-list">
+                    <div class="loading">加载信息中...</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 右侧详情与评论 -->
+        <div class="detail-card card">
+            <h2>📄 信息详情</h2>
+            <div id="postDetailArea">
+                <div class="empty-msg">✨ 点击左侧信息查看详情</div>
+            </div>
+            <div id="commentArea" style="margin-top: 20px;">
+                <div class="empty-msg">💬 暂无评论</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+<script>
+    // ---------- 配置 ----------
+    const CONTRACT_ADDRESS = "0x1bc6D5dbD58d2d6F4905dbe098120fDcC250f4a7";
+    const FLARE_RPC = "https://flare-api.flare.network/ext/C/rpc";
+    const FLARE_CHAIN_ID = 14;
+
+    const CONTRACT_ABI = [
+        {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"commenter","type":"address"},{"indexed":false,"internalType":"string","name":"content","type":"string"}],"name":"CommentAdded","type":"event"},
+        {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"postId","type":"uint256"},{"indexed":true,"internalType":"address","name":"publisher","type":"address"},{"indexed":false,"internalType":"enum InfoBoard.Category","name":"category","type":"uint8"},{"indexed":false,"internalType":"string","name":"title","type":"string"}],"name":"PostCreated","type":"event"},
+        {"inputs":[{"internalType":"uint256","name":"_postId","type":"uint256"},{"internalType":"string","name":"_content","type":"string"}],"name":"addComment","outputs":[],"stateMutability":"nonpayable","type":"function"},
+        {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"allPostIds","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+        {"inputs":[{"internalType":"string","name":"_title","type":"string"},{"internalType":"string","name":"_content","type":"string"},{"internalType":"enum InfoBoard.Category","name":"_category","type":"uint8"}],"name":"createPost","outputs":[],"stateMutability":"nonpayable","type":"function"},
+        {"inputs":[],"name":"getAllPostIds","outputs":[{"internalType":"uint256[]","name":"","type":"uint256[]"}],"stateMutability":"view","type":"function"},
+        {"inputs":[{"internalType":"uint256","name":"_postId","type":"uint256"}],"name":"getCommentsForPost","outputs":[{"components":[{"internalType":"address","name":"commenter","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"}],"internalType":"struct InfoBoard.Comment[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},
+        {"inputs":[],"name":"getPostCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+        {"inputs":[{"internalType":"uint256[]","name":"_ids","type":"uint256[]"}],"name":"getPostsBatch","outputs":[{"components":[{"internalType":"address","name":"publisher","type":"address"},{"internalType":"string","name":"title","type":"string"},{"internalType":"string","name":"content","type":"string"},{"internalType":"enum InfoBoard.Category","name":"category","type":"uint8"},{"internalType":"uint256","name":"timestamp","type":"uint256"}],"internalType":"struct InfoBoard.Post[]","name":"","type":"tuple[]"}],"stateMutability":"view","type":"function"},
+        {"inputs":[{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"}],"name":"postComments","outputs":[{"internalType":"address","name":"commenter","type":"address"},{"internalType":"string","name":"content","type":"string"},{"internalType":"uint256","name":"timestamp","type":"uint256"}],"stateMutability":"view","type":"function"},
+        {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"posts","outputs":[{"internalType":"address","name":"publisher","type":"address"},{"internalType":"string","name":"title","type":"string"},{"internalType":"string","name":"content","type":"string"},{"internalType":"enum InfoBoard.Category","name":"category","type":"uint8"},{"internalType":"uint256","name":"timestamp","type":"uint256"}],"stateMutability":"view","type":"function"}
+    ];
+
+    const categoryMap = ["招聘", "房产", "二手", "服务", "其他"];
+
+    // 全局变量
+    let provider;           // 只读提供者（始终存在）
+    let signer = null;      // 签名者（仅连接后有）
+    let contractReadOnly;   // 只读合约实例
+    let contractWithSigner = null; // 带签名的合约实例
+    let currentAccount = null;
+
+    let allPosts = [];
+    let selectedPostId = null;
+    let currentComments = [];
+
+    // DOM 元素
+    const connectBtn = document.getElementById("connectBtn");
+    const walletAddressSpan = document.getElementById("walletAddress");
+    const publishBtn = document.getElementById("publishBtn");
+    const postTitleInput = document.getElementById("postTitle");
+    const postContentInput = document.getElementById("postContent");
+    const postCategorySelect = document.getElementById("postCategory");
+    const titleCounter = document.getElementById("titleCounter");
+    const contentCounter = document.getElementById("contentCounter");
+    const postListContainer = document.getElementById("postListContainer");
+    const postDetailArea = document.getElementById("postDetailArea");
+    const commentArea = document.getElementById("commentArea");
+
+    // 初始化只读提供者和合约（无需钱包）
+    function initReadOnly() {
+        provider = new ethers.providers.JsonRpcProvider(FLARE_RPC);
+        contractReadOnly = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+        loadAllPosts(); // 加载数据
+    }
+
+    // 加载所有信息（使用只读合约）
+    async function loadAllPosts() {
+        if (!contractReadOnly) return;
+        try {
+            postListContainer.innerHTML = '<div class="loading">⏳ 加载信息中...</div>';
+            const ids = await contractReadOnly.getAllPostIds();
+            if (ids.length === 0) {
+                postListContainer.innerHTML = '<div class="empty-msg">✨ 暂无信息，发布第一条吧！</div>';
+                allPosts = [];
+                return;
+            }
+            const postsData = await contractReadOnly.getPostsBatch(ids);
+            allPosts = postsData.map((post, idx) => ({
+                id: ids[idx].toNumber(),
+                publisher: post.publisher,
+                title: post.title,
+                content: post.content,
+                category: post.category,
+                timestamp: post.timestamp.toNumber()
+            }));
+            renderPostList();
+            if (selectedPostId && allPosts.find(p => p.id === selectedPostId)) {
+                loadPostDetail(selectedPostId);
+            } else if (allPosts.length > 0) {
+                loadPostDetail(allPosts[0].id);
+            } else {
+                postDetailArea.innerHTML = '<div class="empty-msg">暂无信息</div>';
+                commentArea.innerHTML = '<div class="empty-msg">暂无评论</div>';
+            }
+        } catch (e) {
+            console.error(e);
+            postListContainer.innerHTML = '<div class="empty-msg">加载失败，请刷新页面重试</div>';
+        }
+    }
+
+    // 渲染列表
+    function renderPostList() {
+        if (allPosts.length === 0) {
+            postListContainer.innerHTML = '<div class="empty-msg">✨ 暂无信息，发布第一条吧！</div>';
+            return;
+        }
+        let html = '';
+        allPosts.forEach(post => {
+            const categoryName = categoryMap[post.category] || "其他";
+            const date = new Date(post.timestamp * 1000).toLocaleString();
+            const activeClass = (selectedPostId === post.id) ? 'active' : '';
+            html += `
+                <div class="post-item ${activeClass}" data-id="${post.id}">
+                    <div class="post-title">${escapeHtml(post.title)}</div>
+                    <div class="post-meta">
+                        <span class="badge">${categoryName}</span>
+                        <span>👤 ${shortAddress(post.publisher)}</span>
+                        <span>📅 ${date}</span>
+                    </div>
+                </div>
+            `;
+        });
+        postListContainer.innerHTML = html;
+        document.querySelectorAll('.post-item').forEach(el => {
+            el.addEventListener('click', () => {
+                const id = parseInt(el.dataset.id);
+                loadPostDetail(id);
+            });
+        });
+    }
+
+    // 加载详情（使用只读合约）
+    async function loadPostDetail(postId) {
+        selectedPostId = postId;
+        const post = allPosts.find(p => p.id === postId);
+        if (!post) return;
+        renderPostList();
+
+        const date = new Date(post.timestamp * 1000).toLocaleString();
+        const categoryName = categoryMap[post.category] || "其他";
+        postDetailArea.innerHTML = `
+            <div class="detail-title">${escapeHtml(post.title)}</div>
+            <div class="detail-info">
+                <span>分类: ${categoryName}</span> &nbsp;|&nbsp;
+                <span>发布者: ${shortAddress(post.publisher)}</span> &nbsp;|&nbsp;
+                <span>时间: ${date}</span>
+            </div>
+            <div class="detail-content">${escapeHtml(post.content).replace(/\n/g, '<br>')}</div>
+        `;
+        await loadComments(postId);
+        renderCommentForm(postId);
+    }
+
+    async function loadComments(postId) {
+        try {
+            const comments = await contractReadOnly.getCommentsForPost(postId);
+            currentComments = comments.map(c => ({
+                commenter: c.commenter,
+                content: c.content,
+                timestamp: c.timestamp.toNumber()
+            }));
+            renderComments();
+        } catch (e) {
+            console.error(e);
+            commentArea.innerHTML = '<div class="empty-msg">评论加载失败</div>';
+        }
+    }
+
+    function renderComments() {
+        if (!currentComments.length) {
+            commentArea.innerHTML = '<div class="empty-msg">💬 暂无评论，成为第一个评论的人吧！</div>';
+            return;
+        }
+        let html = `<div class="comments-section"><h3>💬 评论 (${currentComments.length})</h3><div class="comment-list">`;
+        currentComments.forEach(c => {
+            const date = new Date(c.timestamp * 1000).toLocaleString();
+            html += `
+                <div class="comment-item">
+                    <div class="comment-meta">
+                        👤 ${shortAddress(c.commenter)} · ${date}
+                    </div>
+                    <div class="comment-content">${escapeHtml(c.content)}</div>
+                </div>
+            `;
+        });
+        html += `</div></div>`;
+        commentArea.innerHTML = html;
+    }
+
+    function renderCommentForm(postId) {
+        const isConnected = !!currentAccount;
+        const disabledAttr = isConnected ? '' : 'disabled';
+        const placeholder = isConnected ? '写下你的评论（最多200字）...' : '请先连接钱包以发表评论';
+        const formHtml = `
+            <div style="margin-top: 20px;">
+                <textarea id="newComment" rows="3" maxlength="200" placeholder="${placeholder}" ${disabledAttr} style="width:100%; padding:12px; border-radius:20px; border:1px solid #e2e8f0; background:${isConnected ? '#fff' : '#f1f5f9'}"></textarea>
+                <div class="char-counter"><span id="commentCounter">0</span>/200</div>
+                <button id="submitCommentBtn" class="btn" style="margin-top:10px;" ${disabledAttr}>${isConnected ? '发布评论' : '🔒 连接钱包后评论'}</button>
+            </div>
+        `;
+        if (commentArea.querySelector('.comments-section')) {
+            commentArea.querySelector('.comments-section').insertAdjacentHTML('afterend', formHtml);
+        } else {
+            commentArea.innerHTML = formHtml;
+        }
+
+        if (isConnected) {
+            const commentTextarea = document.getElementById("newComment");
+            const commentCounter = document.getElementById("commentCounter");
+            if (commentTextarea) {
+                commentTextarea.addEventListener('input', () => {
+                    commentCounter.innerText = commentTextarea.value.length;
+                });
+                document.getElementById("submitCommentBtn").onclick = async () => {
+                    const content = commentTextarea.value.trim();
+                    if (!content) return alert("评论不能为空");
+                    if (content.length > 200) return alert("评论最多200字");
+                    try {
+                        const tx = await contractWithSigner.addComment(postId, content);
+                        await tx.wait();
+                        alert("评论发布成功！");
+                        commentTextarea.value = "";
+                        commentCounter.innerText = "0";
+                        await loadComments(postId);
+                        renderCommentForm(postId);
+                    } catch (e) {
+                        console.error(e);
+                        alert("评论失败: " + (e.reason || e.message));
+                    }
+                };
+            }
+        }
+    }
+
+    // 连接钱包（Rabby/OKX/MetaMask 均支持）
+    async function connectWallet() {
+        if (!window.ethereum) {
+            alert("请安装支持以太坊的钱包，如 Rabby、OKX Wallet 或 MetaMask");
+            return false;
+        }
+        try {
+            // 检查/切换至 Flare 网络
+            const chainId = await window.ethereum.request({ method: 'eth_chainId' });
+            if (parseInt(chainId) !== FLARE_CHAIN_ID) {
+                try {
+                    await window.ethereum.request({
+                        method: 'wallet_switchEthereumChain',
+                        params: [{ chainId: `0x${FLARE_CHAIN_ID.toString(16)}` }],
+                    });
+                } catch (switchError) {
+                    if (switchError.code === 4902) {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [{
+                                chainId: `0x${FLARE_CHAIN_ID.toString(16)}`,
+                                chainName: 'Flare Mainnet',
+                                nativeCurrency: { name: 'Flare', symbol: 'FLR', decimals: 18 },
+                                rpcUrls: [FLARE_RPC],
+                                blockExplorerUrls: ['https://flare-explorer.flare.network/']
+                            }],
+                        });
+                    } else {
+                        throw new Error("请手动切换到 Flare 主网");
+                    }
+                }
+            }
+
+            const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+            currentAccount = accounts[0];
+            walletAddressSpan.innerText = shortAddress(currentAccount);
+
+            // 切换为签名 provider
+            const web3Provider = new ethers.providers.Web3Provider(window.ethereum);
+            signer = web3Provider.getSigner();
+            contractWithSigner = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
+
+            // 更新 UI
+            connectBtn.textContent = "退出钱包";
+            connectBtn.classList.remove("connect-btn");
+            connectBtn.classList.add("disconnect-btn");
+            connectBtn.onclick = disconnectWallet;
+            publishBtn.disabled = false;
+            publishBtn.innerHTML = "📢 发布信息";
+            // 刷新当前详情页的评论表单（启用）
+            if (selectedPostId) {
+                await loadComments(selectedPostId);
+                renderCommentForm(selectedPostId);
+            }
+            return true;
+        } catch (err) {
+            console.error(err);
+            alert("连接失败: " + err.message);
+            return false;
+        }
+    }
+
+    function disconnectWallet() {
+        currentAccount = null;
+        signer = null;
+        contractWithSigner = null;
+        walletAddressSpan.innerText = "未连接";
+        connectBtn.textContent = "连接钱包";
+        connectBtn.classList.remove("disconnect-btn");
+        connectBtn.classList.add("connect-btn");
+        connectBtn.onclick = connectWallet;
+        publishBtn.disabled = true;
+        publishBtn.innerHTML = "🔒 请先连接钱包";
+        // 刷新当前详情页的评论表单（禁用状态）
+        if (selectedPostId) {
+            renderCommentForm(selectedPostId);
+        }
+    }
+
+    // 发布信息
+    async function publishPost() {
+        if (!currentAccount) {
+            alert("请先连接钱包");
+            return;
+        }
+        const title = postTitleInput.value.trim();
+        const content = postContentInput.value.trim();
+        const category = parseInt(postCategorySelect.value);
+        if (!title) return alert("标题不能为空");
+        if (title.length > 200) return alert("标题超过200字限制");
+        if (!content) return alert("内容不能为空");
+        if (content.length > 500) return alert("内容超过500字限制");
+
+        publishBtn.disabled = true;
+        publishBtn.innerText = "发布中...";
+        try {
+            const tx = await contractWithSigner.createPost(title, content, category);
+            await tx.wait();
+            alert("信息发布成功！");
+            postTitleInput.value = "";
+            postContentInput.value = "";
+            titleCounter.innerText = "0";
+            contentCounter.innerText = "0";
+            await loadAllPosts(); // 刷新列表
+        } catch (e) {
+            console.error(e);
+            alert("发布失败: " + (e.reason || e.message));
+        } finally {
+            publishBtn.disabled = false;
+            publishBtn.innerText = "📢 发布信息";
+        }
+    }
+
+    function shortAddress(addr) {
+        if (!addr) return '';
+        return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    // 字符计数
+    function updateCounters() {
+        titleCounter.innerText = postTitleInput.value.length;
+        contentCounter.innerText = postContentInput.value.length;
+    }
+    postTitleInput.addEventListener('input', updateCounters);
+    postContentInput.addEventListener('input', updateCounters);
+
+    // 事件绑定
+    connectBtn.onclick = connectWallet;
+    publishBtn.onclick = publishPost;
+    updateCounters();
+
+    // 启动只读模式
+    initReadOnly();
+</script>
+</body>
+</html>
